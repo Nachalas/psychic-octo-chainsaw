@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <windows.h>
 
 // TODO: capacity?
 class String
@@ -177,32 +178,89 @@ bool operator==(const String& lhs, const String& rhs)
 	return true;
 }
 
+void showMenu()
+{
+	int option;
+	String a;
+	String b;
+	String optionalStr;
+	std::cout << "Меню:\n";
+	std::cout << "1. Ввести строку a.\n";
+	std::cout << "2. Ввести строку b.\n";
+	std::cout << "3. Проверить строки на равенство.\n";
+	std::cout << "4. Присвоить строку a строке b.\n";
+	std::cout << "5. Прибавить строку b к строке a.\n";
+	std::cout << "6. Вывести размер строки a.\n";
+	std::cout << "7. Выйти.\n";
+	do
+	{
+
+		std::cout << "Строка a: " << a << std::endl;
+		std::cout << "Строка b: " << b << std::endl;
+		std::cout << "Выберите пункт: ";
+		while (!(std::cin >> option)) {
+			std::cin.clear();
+			std::cin.ignore(32767, '\n');
+			std::cout << "Выбрана неверная опция! Выберите пункт: ";
+		}
+		switch (option)
+		{
+		case 1:
+			std::cout << "Введите строку: ";
+			std::cin.ignore(32767, '\n');
+			std::cin >> a;
+			continue;
+		case 2:
+			std::cout << "Введите строку: ";
+			std::cin.ignore(32767, '\n');
+			std::cin >> b;
+			continue;
+		case 3:
+			std::cout << ((a == b) ? "Строки равны" : "Строки не равны") << std::endl;
+			continue;
+		case 4:
+			a = b;
+			continue;
+		case 5:
+			a += b;
+			continue;
+		case 6:
+			std::cout << "Размер строки a: " << a.Size() << std::endl;
+			continue;
+		}
+	} while (option != 7);
+}
+
 int main()
 {
-	String a; // default ctor
-	std::cout << a.Size() << std::endl; // empty string size check
-	std::cout << a.Data() << std::endl; // empty string data access check
-	std::cout << a << std::endl; // empty string cout check
-	a = "test string a"; // operator=(const char*) check
-	std::cout << a << std::endl; // string cout check
-	String b("test string b"); // String(const char*) ctor check
-	std::cout << b << std::endl;
-	String c = a; // String(const String&) ctor check
-	std::cout << c << std::endl;
-	a = b; // operator=(const String&) check
-	std::cout << a << std::endl;
-	a += "appended"; // operator+=(const char*) check
-	std::cout << a << std::endl;
-	std::cout << a.Size() << std::endl;
-	a += b; // operator+=(const String&) check
-	std::cout << a << std::endl;
-	std::cout << a.Size() << std::endl;
-	a = "test";
-	b = "test";
-	std::cout << (a == b) << std::endl; // operator== check on equal
-	b = "test1";
-	std::cout << (a == b) << std::endl; // operator== check on inequal
-	String d;
-	std::cin >> d;
-	std::cout << d << std::endl;
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	showMenu();
+	return 0;
+	//String a; // default ctor
+	//std::cout << a.Size() << std::endl; // empty string size check
+	//std::cout << a.Data() << std::endl; // empty string data access check
+	//std::cout << a << std::endl; // empty string cout check
+	//a = "test string a"; // operator=(const char*) check
+	//std::cout << a << std::endl; // string cout check
+	//String b("test string b"); // String(const char*) ctor check
+	//std::cout << b << std::endl;
+	//String c = a; // String(const String&) ctor check
+	//std::cout << c << std::endl;
+	//a = b; // operator=(const String&) check
+	//std::cout << a << std::endl;
+	//a += "appended"; // operator+=(const char*) check
+	//std::cout << a << std::endl;
+	//std::cout << a.Size() << std::endl;
+	//a += b; // operator+=(const String&) check
+	//std::cout << a << std::endl;
+	//std::cout << a.Size() << std::endl;
+	//a = "test";
+	//b = "test";
+	//std::cout << (a == b) << std::endl; // operator== check on equal
+	//b = "test1";
+	//std::cout << (a == b) << std::endl; // operator== check on inequal
+	//String d;
+	//std::cin >> d;
+	//std::cout << d << std::endl;
 }
