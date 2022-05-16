@@ -136,7 +136,6 @@ public:
 
 	~String()
 	{
-		std::cout << "Destructed " << size_ << " abobas" << std::endl;
 		delete[] str_;
 	}
 
@@ -203,4 +202,7 @@ int main()
 	std::cout << (a == b) << std::endl; // operator== check on equal
 	b = "test1";
 	std::cout << (a == b) << std::endl; // operator== check on inequal
+	String d;
+	std::cin >> d;
+	std::cout << d << std::endl;
 }
