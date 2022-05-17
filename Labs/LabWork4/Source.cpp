@@ -390,7 +390,7 @@ private:
 	double height_;
 };
 
-int GetIntOptionFromConsole()
+int GetIntFromConsole()
 {
 	int option = 0;
 	while (!(std::cin >> option)) {
@@ -528,7 +528,7 @@ void showMenu()
 		std::cout << "5. Удалить последнюю фигуру.\n";
 		std::cout << "6. Выйти.\n";
 		std::cout << "Выберите пункт: ";
-		option = GetIntOptionFromConsole();
+		option = GetIntFromConsole();
 		switch (option)
 		{
 		case 1:
@@ -546,9 +546,8 @@ void showMenu()
 			system("cls");
 			std::cout << "Введите название для файла: ";
 			std::cin >> filename;
-			// TODO: enter to file logic
 			std::ofstream ofs(filename);
-				if(!ofs.is_open())
+				if(ofs.is_open())
 				{
 					for (int i = 0; i < shapes.size(); i++)
 					{
@@ -568,7 +567,7 @@ void showMenu()
 			system("cls");
 			OutputFigureTypesSelection();
 			std::cout << "Выберите пункт: ";
-			int figure_option = GetIntOptionFromConsole();
+			int figure_option = GetIntFromConsole();
 			Shape* new_shape = GetDefaultConstructedShape(figure_option);
 			if (new_shape != nullptr)
 			{
@@ -585,7 +584,7 @@ void showMenu()
 			system("cls");
 			OutputFigureTypesSelection();
 			std::cout << "Выберите пункт: ";
-			int figure_option = GetIntOptionFromConsole();
+			int figure_option = GetIntFromConsole();
 			Shape* new_shape = GetShape(figure_option);
 			if (new_shape != nullptr)
 			{
