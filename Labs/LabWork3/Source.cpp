@@ -60,9 +60,9 @@ private:
 	double radius_;
 };
 
-class Square : public Shape
+class RectangleCl : public Shape
 {
-	Square(Point2d first_corner, Point2d second_corner)
+	RectangleCl(Point2d first_corner, Point2d second_corner)
 	{
 		// TODO: проверка на x1 == x2 || y1 == y2
 		assert((first_corner.x != second_corner.x) && first_corner.y != second_corner.y);

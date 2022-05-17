@@ -180,7 +180,7 @@ bool operator==(const String& lhs, const String& rhs)
 
 void showMenu()
 {
-	int option;
+	int option = 0;
 	String a;
 	String b;
 	String optionalStr;
