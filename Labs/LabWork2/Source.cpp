@@ -184,17 +184,16 @@ void showMenu()
 	String a;
 	String b;
 	String optionalStr;
-	std::cout << "Меню:\n";
-	std::cout << "1. Ввести строку a.\n";
-	std::cout << "2. Ввести строку b.\n";
-	std::cout << "3. Проверить строки на равенство.\n";
-	std::cout << "4. Присвоить строку a строке b.\n";
-	std::cout << "5. Прибавить строку b к строке a.\n";
-	std::cout << "6. Вывести размер строки a.\n";
-	std::cout << "7. Выйти.\n";
 	do
 	{
-
+		std::cout << "Меню:\n";
+		std::cout << "1. Ввести строку a.\n";
+		std::cout << "2. Ввести строку b.\n";
+		std::cout << "3. Проверить строки на равенство.\n";
+		std::cout << "4. Присвоить строку a строке b.\n";
+		std::cout << "5. Прибавить строку b к строке a.\n";
+		std::cout << "6. Вывести размер строки a.\n";
+		std::cout << "7. Выйти.\n";
 		std::cout << "Строка a: " << a << std::endl;
 		std::cout << "Строка b: " << b << std::endl;
 		std::cout << "Выберите пункт: ";
@@ -206,25 +205,31 @@ void showMenu()
 		switch (option)
 		{
 		case 1:
+			system("cls");
 			std::cout << "Введите строку: ";
 			std::cin.ignore(32767, '\n');
 			std::cin >> a;
 			continue;
 		case 2:
+			system("cls");
 			std::cout << "Введите строку: ";
 			std::cin.ignore(32767, '\n');
 			std::cin >> b;
 			continue;
 		case 3:
+			system("cls");
 			std::cout << ((a == b) ? "Строки равны" : "Строки не равны") << std::endl;
 			continue;
 		case 4:
+			system("cls");
 			a = b;
 			continue;
 		case 5:
+			system("cls");
 			a += b;
 			continue;
 		case 6:
+			system("cls");
 			std::cout << "Размер строки a: " << a.Size() << std::endl;
 			continue;
 		}

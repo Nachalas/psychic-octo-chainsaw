@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <fstream>
 #include <Windows.h>
 
 //struct Point2d
@@ -22,15 +23,15 @@
 class Shape
 {
 public: 
-	virtual void printData() = 0;
-	virtual void area() = 0;
-	virtual void volume() = 0;
-	virtual ~Shape() {};
+	virtual void printData(std::ostream&) = 0;
+	virtual void area(std::ostream&) = 0;
+	virtual void volume(std::ostream&) = 0;
+	virtual ~Shape() {}
 };
 
 class TwoDShape : public Shape
 {
-	void volume() override {}
+	void volume(std::ostream&) override {}
 };
 
 class ThreeDShape : public Shape
@@ -68,14 +69,14 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Окружность с радиусом " << std::setprecision(2) << std::fixed << radius_ << std::endl;
+		os << "Окружность с радиусом " << std::setprecision(2) << std::fixed << radius_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
-		std::cout << "Площадь окружности: " << 3.14 * radius_ * radius_ <<  std::endl;
+		os << "Площадь окружности: " << 3.14 * radius_ * radius_ <<  std::endl;
 	}
 private:
 	double radius_;
@@ -128,14 +129,14 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Прямоугольник со сторонами " << std::setprecision(2) << std::fixed << height_ << ", " << width_ << std::endl;
+		os << "Прямоугольник со сторонами " << std::setprecision(2) << std::fixed << height_ << ", " << width_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
-		std::cout << "Площадь прямоугольника: " << height_ * width_ << std::endl;
+		os << "Площадь прямоугольника: " << height_ * width_ << std::endl;
 	}
 private:
 	double width_;
@@ -190,14 +191,14 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Кольцо с внутренним радиусом " << std::setprecision(2) << std::fixed << inner_radius_ << " и внешним радиусом " << outer_radius_ << std::endl;
+		os << "Кольцо с внутренним радиусом " << std::setprecision(2) << std::fixed << inner_radius_ << " и внешним радиусом " << outer_radius_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
-		std::cout << "Площадь кольца: " << (3.14 * outer_radius_ * outer_radius_) - (3.14 * inner_radius_ * inner_radius_) << std::endl;
+		os << "Площадь кольца: " << (3.14 * outer_radius_ * outer_radius_) - (3.14 * inner_radius_ * inner_radius_) << std::endl;
 	}
 private:
 	double outer_radius_;
@@ -235,19 +236,19 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Сфера c радиусом " << std::setprecision(2) << std::fixed << radius_ << std::endl;
+		os << "Сфера c радиусом " << std::setprecision(2) << std::fixed << radius_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
-		std::cout << "Площадь поверхности сферы: " << 4 * 3.14 * radius_ * radius_ << std::endl;
+		os << "Площадь поверхности сферы: " << 4 * 3.14 * radius_ * radius_ << std::endl;
 	}
 
-	void volume() override
+	void volume(std::ostream& os) override
 	{
-		std::cout << "Объём сферы: " << (4. / 3) * 3.14 * radius_ * radius_ * radius_ << std::endl;
+		os << "Объём сферы: " << (4. / 3) * 3.14 * radius_ * radius_ * radius_ << std::endl;
 	}
 private:
 	double radius_;
@@ -300,19 +301,19 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Цилиндр с радиусом основания " << std::setprecision(2) << std::fixed << radius_ << " и высотой " << height_ << std::endl;
+		os << "Цилиндр с радиусом основания " << std::setprecision(2) << std::fixed << radius_ << " и высотой " << height_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
-		std::cout << "Площадь поверхности цилиндра: " << 2 * 3.14 * radius_ * height_ << std::endl;
+		os << "Площадь поверхности цилиндра: " << 2 * 3.14 * radius_ * height_ << std::endl;
 	}
 
-	void volume() override
+	void volume(std::ostream& os) override
 	{
-		std::cout << "Объём цилиндра: " << 3.14 * radius_ * radius_ * height_ << std::endl;
+		os << "Объём цилиндра: " << 3.14 * radius_ * radius_ * height_ << std::endl;
 	}
 private:
 	double radius_;
@@ -366,23 +367,23 @@ public:
 		}
 	}
 
-	void printData() override
+	void printData(std::ostream& os) override
 	{
-		std::cout << "Конус с радиусом основания " << std::setprecision(2) << std::fixed << radius_ << " и высотой " << height_ << std::endl;
+		os << "Конус с радиусом основания " << std::setprecision(2) << std::fixed << radius_ << " и высотой " << height_ << std::endl;
 	}
 
-	void area() override
+	void area(std::ostream& os) override
 	{
 		double generatrix_length = std::sqrt(radius_ * radius_ + height_ * height_);
 		double side_area = 3.14 * radius_ * generatrix_length;
 		double circle_area = 3.14 * radius_ * radius_;
-		std::cout << "Площадь поверхности конуса: " << side_area + circle_area << std::endl;
+		os << "Площадь поверхности конуса: " << side_area + circle_area << std::endl;
 	}
 
-	void volume() override
+	void volume(std::ostream& os) override
 	{
 		double circle_area = 3.14 * radius_ * radius_;
-		std::cout << "Объём цилиндра: " << (1. / 3) * height_ * circle_area << std::endl;
+		os << "Объём цилиндра: " << (1. / 3) * height_ * circle_area << std::endl;
 	}
 private:
 	double radius_;
@@ -534,18 +535,34 @@ void showMenu()
 			system("cls");
 			for(int i = 0; i < shapes.size(); i++)
 			{
-				shapes[i]->printData();
-				shapes[i]->area();
-				shapes[i]->volume();
+				shapes[i]->printData(std::cout);
+				shapes[i]->area(std::cout);
+				shapes[i]->volume(std::cout);
 				std::cout << "---------" << std::endl;
 			}
 			continue;
 		case 2:
+			{
 			system("cls");
 			std::cout << "Введите название для файла: ";
 			std::cin >> filename;
 			// TODO: enter to file logic
+			std::ofstream ofs(filename);
+				if(!ofs.is_open())
+				{
+					for (int i = 0; i < shapes.size(); i++)
+					{
+						shapes[i]->printData(ofs);
+						shapes[i]->area(ofs);
+						shapes[i]->volume(ofs);
+						ofs << "---------" << std::endl;
+					}
+				} else
+				{
+					std::cout << "Не удалось открыть файл. Попробуйте другое название." << std::endl;
+				}
 			continue;
+			}
 		case 3:
 		{
 			system("cls");
