@@ -17,6 +17,7 @@ enum class ShapeType
 	CIRCLE,
 	RECTANGLE,
 	TRIANGLE,
+	PYRAMID,
 };
 
 struct Point2d
@@ -39,9 +40,31 @@ struct Point2d
 	friend std::ostream& operator<<(std::ostream& os, const Point2d&);
 };
 
+struct Point3d
+{
+	double x;
+	double y;
+	double z;
+
+	Point3d()
+	{
+		x = 0.;
+		y = 0.;
+		z = 0.;
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Point3d&);
+};
+
 std::ostream& operator<<(std::ostream& os, const Point2d& point)
 {
 	os << "(" << point.x << ", " << point.y << ")";
+	return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const Point3d& point)
+{
+	os << "(" << point.x << ", " << point.y << ", " << point.z << ")";
 	return os;
 }
 
@@ -165,6 +188,51 @@ public:
 private:
 	Point2d center_coords_;
 	double radius_;
+};
+
+class Pyramid : public Shape
+{
+public:
+
+	Pyramid(Point3d first_corner, Point3d second_corner, Point3d edge)
+	{
+		type_ = ShapeType::PYRAMID;
+		base_corner_1 = first_corner;
+		base_corner_2 = second_corner;
+		edge_point = edge;
+	}
+
+	void SetBasePoints(const std::array<Point3d, 2>& points)
+	{
+		base_corner_1 = points[0];
+		base_corner_2 = points[1];
+	}
+
+	std::array<Point3d, 2> GetBasePoints()
+	{
+		return { base_corner_1, base_corner_2 };
+	}
+
+	void SetEdgePoint(const Point3d& point)
+	{
+		edge_point = point;
+	}
+
+	Point3d GetEdgePoint()
+	{
+		return edge_point;
+	}
+
+	void PrintData(std::ostream& os) override
+	{
+		os << "Пирамида с основанием в точках " << base_corner_1 << ", " << base_corner_2 << " и точкой " << edge_point << std::endl;
+	}
+
+private:
+
+	Point3d base_corner_1;
+	Point3d base_corner_2;
+	Point3d edge_point;
 };
 
 class RectangleCl : public Shape
@@ -456,6 +524,65 @@ double GetDoubleFromConsole()
 	return val;
 }
 
+Point2d GetTrianglePointFromConsole(int index)
+{
+	Point2d point;
+	std::cout << "Введите координату x точки " << index << ": ";
+	point.x = GetDoubleFromConsole();
+	std::cout << "Введите координату y точки " << index << ": ";
+	point.y = GetDoubleFromConsole();
+	return point;
+}
+
+void ShowChangeFigureMenu(Shape* shape)
+{
+	switch (shape->GetShapeType())
+	{
+	case ShapeType::CIRCLE:
+	{
+		Circle* circle_ptr = (Circle*) shape;
+		Point2d center{};
+		double radius = 0.;
+		std::cout << "Введите координату x центра: ";
+		center.x = GetDoubleFromConsole();
+		std::cout << "Введите координату y центра: ";
+		center.y = GetDoubleFromConsole();
+		std::cout << "Введите радиус окружности: ";
+		radius = GetDoubleFromConsole();
+		circle_ptr->SetRadius(radius);
+		circle_ptr->SetCenterCoords(center);
+		break;
+	}
+	case ShapeType::TRIANGLE:
+	{
+		Triangle* triangle_ptr = (Triangle*)shape;
+		std::array<Point2d, 3> points{};
+		points[0] = GetTrianglePointFromConsole(1);
+		points[1] = GetTrianglePointFromConsole(2);
+		points[2] = GetTrianglePointFromConsole(3);
+		triangle_ptr->SetPoints(points);
+		break;
+	}
+	case ShapeType::RECTANGLE:
+	{
+		RectangleCl* rectangle_ptr = (RectangleCl*)shape;
+		std::array<Point2d, 2> points{};
+		std::cout << "Введите координату x угла 1: ";
+		points[0].x = GetDoubleFromConsole();
+		std::cout << "Введите координату y угла 1: ";
+		points[0].y = GetDoubleFromConsole();
+
+		std::cout << "Введите координату x угла 2: ";
+		points[1].x = GetDoubleFromConsole();
+		std::cout << "Введите координату y угла 2: ";
+		points[1].y = GetDoubleFromConsole();
+
+		rectangle_ptr->SetPoints(points);
+		break;
+	}
+	}
+}
+
 void showMenu()
 {
 	int option = -1;
@@ -485,7 +612,6 @@ void showMenu()
 		std::cout << "Меню:\n";
 		std::cout << "1. Вывести данные о фигурах в консоль.\n";
 		std::cout << "2. Вывести данные о фигурах в файл.\n";
-		// TODO: пункт 3 если будет время
 		std::cout << "3. Изменить фигуру.\n";
 		std::cout << "4. Проверить фигуры на пересечение.\n";
 		std::cout << "5. Выйти.\n";
@@ -524,9 +650,19 @@ void showMenu()
 			continue;
 		}
 		case 3:
+		{
 			system("cls");
-
+			std::cout << "Выберите индекс фигуры: ";
+			int selectedFigureIndex = GetIntFromConsole();
+			if(selectedFigureIndex >= 0 && selectedFigureIndex <= 6)
+			{
+				ShowChangeFigureMenu(shapes[selectedFigureIndex]);
+			} else
+			{
+				std::cout << "Выбрана несуществующая фигура" << std::endl;
+			}
 			continue;
+		}		
 		case 4:
 			system("cls");
 			std::cout << "Введите индекс 1: ";
