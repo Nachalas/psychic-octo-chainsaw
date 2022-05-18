@@ -747,6 +747,89 @@ std::vector<ProductEntry> GetProductsSortedByDate()
 	return new_products;
 }
 
+std::vector<ProductEntry> GetProductsByName(const std::string& name)
+{
+	std::vector<ProductEntry> new_products;
+	std::copy_if(
+		products.begin(), 
+		products.end(), 
+		std::back_inserter(new_products), 
+		[name](const ProductEntry& product) {return product.name == name; });
+	return new_products;
+}
+
+std::vector<ProductEntry> GetProductsByAdderSurname(const std::string& surname)
+{
+	std::vector<ProductEntry> new_products;
+	std::copy_if(
+		products.begin(),
+		products.end(),
+		std::back_inserter(new_products),
+		[surname](const ProductEntry& product) {return product.added_by.surname == surname; });
+	return new_products;
+}
+
+std::vector<ProductEntry> GetProductsByDate(SYSTEMTIME date)
+{
+	std::vector<ProductEntry> new_products;
+	std::copy_if(
+		products.begin(),
+		products.end(),
+		std::back_inserter(new_products),
+		[date](const ProductEntry& product) {return product.time.wMonth == date.wMonth && product.time.wDay == date.wDay; });
+	return new_products;
+}
+
+void ShowSearchOptionsMenu()
+{
+	system("cls");
+	if (!products.empty())
+	{
+		int selected_option = 0;
+		std::string user_str_input;
+		SYSTEMTIME date_input{};
+		do
+		{
+			system("cls");
+			std::cout << "=== Поиск по товарам ===\n";
+			std::cout << "1. Поиск по названию.\n";
+			std::cout << "2. Поиск по дате добавления.\n";
+			std::cout << "3. Поиск по фамилии добавившего.\n";
+			std::cout << "0. Выйти.\n";
+			selected_option = GetIntFromConsole();
+
+			switch (selected_option)
+			{
+			case 1:
+				system("cls");
+				std::cout << "Введите название товара: ";
+				user_str_input = HandleCyrillicInput();
+				PrintProductsTable(GetProductsByName(user_str_input));
+				continue;
+			case 2:
+				system("cls");
+				std::cout << "Введите месяц (1-12): ";
+				date_input.wMonth = GetIntFromConsoleWithBounds(1, 12);
+				std::cout << "Введите день (1-31): ";
+				date_input.wDay = GetIntFromConsoleWithBounds(1, 31);
+				PrintProductsTable(GetProductsByDate(date_input));
+				continue;
+			case 3:
+				system("cls");
+				std::cout << "Введите фамилию: ";
+				user_str_input = HandleCyrillicInput();
+				PrintProductsTable(GetProductsByAdderSurname(user_str_input));
+				continue;
+			}
+		} while (selected_option != 0);
+	}
+	else
+	{
+		std::cout << "Таблица товаров на данный момент пуста." << std::endl;
+		system("pause");
+	}
+}
+
 void ShowSortingOptionsMenu()
 {
 	system("cls");
@@ -800,6 +883,7 @@ void ShowAdminMenu()
 		std::cout << "7. Редактировать запись с товаром.\n";
 		std::cout << "8. Удалить товар.\n";
 		std::cout << "9. Сортировки.\n";
+		std::cout << "10. Поиск по товарам.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 		selected_option = GetIntFromConsole();
@@ -826,10 +910,16 @@ void ShowAdminMenu()
 			continue;
 		case 7:
 			EditProductEntry();
+			continue;
 		case 8:
 			DeleteProductEntry();
+			continue;
 		case 9:
 			ShowSortingOptionsMenu();
+			continue;
+		case 10:
+			ShowSearchOptionsMenu();
+			continue;
 		}
 	} while (selected_option != 0);
 }
