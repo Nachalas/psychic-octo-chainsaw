@@ -490,17 +490,17 @@ void PrintUsersTable()
 	system("pause");
 }
 
-void PrintProductsTable()
+void PrintProductsTable(const std::vector<ProductEntry>& products_vector)
 {
 	system("cls");
 	std::cout << "=== Товары ===" << std::endl;
 
-	if (!products.empty())
+	if (!products_vector.empty())
 	{
 		PrintProductTableHeader();
-		for (int i = 0; i < products.size(); i++)
+		for (int i = 0; i < products_vector.size(); i++)
 		{
-			PrintProductEntry(i + 1, products[i]);
+			PrintProductEntry(i + 1, products_vector[i]);
 		}
 	}
 	else
@@ -717,6 +717,73 @@ void DeleteProductEntry()
 	}
 }
 
+std::vector<ProductEntry> GetProductsSortedByName()
+{
+	std::vector<ProductEntry> new_products = products;
+	std::sort(new_products.begin(), new_products.end(), [](const ProductEntry& lhs, const ProductEntry& rhs)
+	{
+			return lhs.name < rhs.name;
+	});
+	return new_products;
+}
+
+std::vector<ProductEntry> GetProductsSortedByPrice()
+{
+	std::vector<ProductEntry> new_products = products;
+	std::sort(new_products.begin(), new_products.end(), [](const ProductEntry& lhs, const ProductEntry& rhs)
+		{
+			return lhs.price < rhs.price;
+		});
+	return new_products;
+}
+
+std::vector<ProductEntry> GetProductsSortedByDate()
+{
+	std::vector<ProductEntry> new_products = products;
+	std::sort(new_products.begin(), new_products.end(), [](const ProductEntry& lhs, const ProductEntry& rhs)
+		{
+			return IsTimeLess(lhs.time, rhs.time);
+		});
+	return new_products;
+}
+
+void ShowSortingOptionsMenu()
+{
+	system("cls");
+	if (!products.empty())
+	{
+		int selected_option = 0;
+		do
+		{
+			system("cls");
+			std::cout << "=== Сортировать товары ===\n";
+			std::cout << "1. Сортировать по названию.\n";
+			std::cout << "2. Сортировать по цене.\n";
+			std::cout << "3. Сортировать по дате добавления.\n";
+			std::cout << "0. Выйти.\n";
+			selected_option = GetIntFromConsole();
+
+			switch (selected_option)
+			{
+			case 1:
+				PrintProductsTable(GetProductsSortedByName());
+				continue;
+			case 2:
+				PrintProductsTable(GetProductsSortedByPrice());
+				continue;
+			case 3:
+				PrintProductsTable(GetProductsSortedByDate());
+				continue;
+			}
+		} while (selected_option != 0);
+	}
+	else
+	{
+		std::cout << "Таблица товаров на данный момент пуста." << std::endl;
+		system("pause");
+	}
+}
+
 void ShowAdminMenu()
 {
 	int selected_option = 0;
@@ -732,6 +799,7 @@ void ShowAdminMenu()
 		std::cout << "6. Вывести данные о товарах.\n";
 		std::cout << "7. Редактировать запись с товаром.\n";
 		std::cout << "8. Удалить товар.\n";
+		std::cout << "9. Сортировки.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 		selected_option = GetIntFromConsole();
@@ -754,12 +822,14 @@ void ShowAdminMenu()
 			ShowAddNewProductForm();
 			continue;
 		case 6:
-			PrintProductsTable();
+			PrintProductsTable(products);
 			continue;
 		case 7:
 			EditProductEntry();
 		case 8:
 			DeleteProductEntry();
+		case 9:
+			ShowSortingOptionsMenu();
 		}
 	} while (selected_option != 0);
 }
