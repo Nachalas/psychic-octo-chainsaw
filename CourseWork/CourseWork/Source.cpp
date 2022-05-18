@@ -3,10 +3,12 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <limits>
 #include <iomanip>
 #include <Windows.h>
 #include <conio.h>
+#include <tuple>
 
 #undef max
 #undef min
@@ -42,6 +44,11 @@ struct FIO {
 	std::string middle_name;
 };
 
+std::string GetFIOString(const FIO& fio)
+{
+	return fio.surname + " " + fio.name + " " + fio.middle_name;
+}
+
 struct UserInfo
 {
 	AuthInfo auth_info;
@@ -53,23 +60,41 @@ struct ProductEntry
 	std::string name; // наименование товара
 	int count; // количество товара на складе
 	double price; // цена за один товар
-	// date 
+	SYSTEMTIME time; // время добавления товара
 	FIO added_by; // ФИО зарегистрировавшего товар
 };
+
+bool IsTimeLess(SYSTEMTIME lhs, SYSTEMTIME rhs)
+{
+	return std::tie(lhs.wMonth, lhs.wDay, lhs.wHour, lhs.wMinute, lhs.wSecond)
+	< std::tie(rhs.wMonth, rhs.wDay, rhs.wHour, rhs.wMinute, rhs.wSecond);
+}
+
+std::string GetTimeString(SYSTEMTIME time)
+{
+	return (time.wDay < 10 ? "0" : "") + std::to_string(time.wDay) + "/"
+		+ (time.wMonth < 10 ? "0" : "") + std::to_string(time.wMonth) + " "
+		+ (time.wHour < 10 ? "0" : "") + std::to_string(time.wHour) + ":"
+		+ (time.wMinute < 10 ? "0" : "") + std::to_string(time.wMinute) + ":"
+		+ (time.wSecond < 10 ? "0" : "") + std::to_string(time.wSecond);
+	
+}
 
 // Максимальные длины для полей логин и пароль, ФИО
 const int MAX_LOGIN_LENGTH = 12;
 const int MAX_PASSWORD_LENGTH = 12;
 const int MAX_USER_INPUT_LENGTH = 20;
-// TODO: comment
+// Названия служебных файлов
 const std::string ADMIN_CREDENTIALS_FILENAME = "admin.txt";
+const std::string USERS_CREDENTIALS_FILENAME = "users.txt";
+const std::string PRODUCTS_DATA_FILENAME = "products.txt";
 // Вектор, содержащий данные о пользователях
 std::vector<UserInfo> users;
 // Вектор, содержащий данные о товарах
 std::vector<ProductEntry> products;
 
 
-// TODO: comment
+// Считывает число типа int из консоли, при неверных входных данных пытается считать число заново
 int GetIntFromConsole()
 {
 	int value = 0;
@@ -81,6 +106,54 @@ int GetIntFromConsole()
 	return value;
 }
 
+// Аналог GetIntFromConsole(), но с дополнительной проверкой на вхождение в диапазон
+int GetIntFromConsoleWithBounds(int left, int right)
+{
+	int value = left - 1;
+	while (!(std::cin >> value) || !(value <= right && value >= left)) {
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		if(!(value <= right && value >= left))
+		{
+			std::cout << "Введенное число не входит в диапазон. Введите число: ";
+		} else
+		{
+			std::cout << "Введен неправильный символ. Введите число: ";
+		}
+	}
+	return value;
+}
+
+// Считывает число типа double из консоли, при неверных входных данных пытается считать число заново
+double GetDoubleFromConsole()
+{
+	double value = 0;
+	while (!(std::cin >> value)) {
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << "Введен неправильный символ. Введите число: ";
+	}
+	return value;
+}
+
+SYSTEMTIME GetSystemtimeFromConsole()
+{
+	SYSTEMTIME new_time{};
+	std::cout << "Введите месяц (1-12): ";
+	new_time.wMonth = GetIntFromConsoleWithBounds(1, 12);
+	std::cout << "Введите день (1-31): ";
+	new_time.wDay = GetIntFromConsoleWithBounds(1, 31);
+	std::cout << "Введите час (1-24): ";
+	new_time.wHour = GetIntFromConsoleWithBounds(0, 23);
+	std::cout << "Введите минуты (0-59): ";
+	new_time.wMinute = GetIntFromConsoleWithBounds(0, 59);
+	//std::cout << "Введите секунды (0-59): ";
+	//new_time.wSecond = GetIntFromConsoleWithBounds(0, 59);
+	new_time.wSecond = 0;
+	return new_time;
+}
+
+// Функции для проверки валидности введенных пользователем символов
 bool IsLoginCharInvalid(char c)
 {
 	return !(c >= 65 && c <= 90) && // A-Z
@@ -98,8 +171,11 @@ bool IsCyrillicCharInvalid(char c)
 {
 	return !(c >= -64 && c <= 0) && c != '\r' && c != '\b';
 }
+// ------------
 
-
+// Функции, контролирующие набор данных пользователем: валидируют вводимые символы и
+// следят за длиной вводимых строк. Функция для ввода пароля скрывает символами *
+// введенные данные
 std::string HandleLoginInput()
 {
 	std::string login_string;
@@ -210,6 +286,19 @@ std::string HandleCyrillicInput()
 		}
 	}
 }
+// -------
+
+FIO GetFIOFromConsole()
+{
+	FIO new_fio;
+	std::cout << "Введите новую фамилию: ";
+	new_fio.surname = HandleCyrillicInput();
+	std::cout << std::endl << "Введите новое имя: ";
+	new_fio.name = HandleCyrillicInput();
+	std::cout << std::endl << "Введите новое отчество: ";
+	new_fio.middle_name = HandleCyrillicInput();
+	return new_fio;
+}
 
 // Функция выводит в консоль меню с вариантами авторизации,
 // возвращает выбранный пользователем пункт
@@ -229,7 +318,7 @@ int ShowAuthMenu()
 	return selected_option;
 }
 
-// TODO: comment
+// Функция показывает форму для ввода пользовательских данных: логин + пароль
 AuthInfo ShowAuthForm()
 {
 	AuthInfo form_info;
@@ -298,7 +387,33 @@ void ShowAddNewUserForm()
 	}
 	std::cout << std::endl << "Введите пароль пользователя: ";
 	user_auth_info.password = HandlePasswordInput();
+
 	users.push_back(user_info);
+	std::cout << std::endl << "Запись успешно добавлена." << std::endl;
+	system("pause");
+}
+
+//std::string name; // наименование товара
+//int count; // количество товара на складе
+//double price; // цена за один товар
+//SYSTEMTIME time; // время добавления товара
+//FIO added_by; // ФИО зарегистрировавшего товар
+void ShowAddNewProductForm() {
+	system("cls");
+	ProductEntry product;
+	std::cout << "=== Добавление нового товара ===" << std::endl;
+	std::cout << "Введите название товара: ";
+	product.name = HandleCyrillicInput();
+	std::cout << std::endl << "Введите количество товара на складе: ";
+	product.count = GetIntFromConsole();
+	std::cout << "Введите цену на товар: ";
+	product.price = GetDoubleFromConsole();
+	GetLocalTime(&product.time);
+	product.added_by.name = "Валерий";
+	product.added_by.surname = "Жмышенко";
+	product.added_by.middle_name = "Альбертович";
+
+	products.push_back(product);
 	std::cout << std::endl << "Запись успешно добавлена." << std::endl;
 	system("pause");
 }
@@ -328,6 +443,33 @@ void PrintUserEntry(int index, const UserInfo& user)
 	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
+void PrintProductTableHeader()
+{
+	std::cout << "__________________________________________________________________________________________________________________________________________" << std::endl;
+	std::cout << "|" << std::fixed
+		<< std::setw(5) << "#" << "|"
+		<< std::setw(20) << "Название" << "|"
+		<< std::setw(15) << "Количество" << "|"
+		<< std::setw(15) << "Цена" << "|"
+		<< std::setw(15) << "Дата" << "|"
+		<< std::setw(62) << "ФИО добавившего пользователя" << "|"
+		<< std::endl;
+	std::cout << "|_____|____________________|_______________|_______________|_______________|______________________________________________________________" << std::endl;
+}
+
+void PrintProductEntry(int index, const ProductEntry& product)
+{
+	std::cout << "|" << std::fixed
+		<< std::setw(5) << index << "|"
+		<< std::setw(20) << product.name << "|"
+		<< std::setw(15) << product.count << "|"
+		<< std::setw(15) << std::setprecision(2) << product.price << "|"
+		<< std::setw(15) << GetTimeString(product.time) << "|"
+		<< std::setw(62) << GetFIOString(product.added_by) << "|"
+		<< std::endl;
+	std::cout << "|_____|____________________|_______________|_______________|_______________|______________________________________________________________|" << std::endl;
+}
+
 void PrintUsersTable()
 {
 	system("cls");
@@ -348,9 +490,36 @@ void PrintUsersTable()
 	system("pause");
 }
 
+void PrintProductsTable()
+{
+	system("cls");
+	std::cout << "=== Товары ===" << std::endl;
+
+	if (!products.empty())
+	{
+		PrintProductTableHeader();
+		for (int i = 0; i < products.size(); i++)
+		{
+			PrintProductEntry(i + 1, products[i]);
+		}
+	}
+	else
+	{
+		std::cout << "На данный момент нет записей." << std::endl;
+	}
+
+	system("pause");
+}
+
 int SelectUserRow()
 {
 	std::cout << "Введите индекс пользователя: ";
+	return GetIntFromConsole();
+}
+
+int SelectProductRow()
+{
+	std::cout << "Введите индекс продукта: ";
 	return GetIntFromConsole();
 }
 
@@ -386,12 +555,72 @@ void ShowEditUserMenu(UserInfo& user)
 			user.fio.middle_name = HandleCyrillicInput();
 			continue;
 		case 4:
-			std::cout << "Введите новый логин: ";
-			user.auth_info.login = HandleLoginInput();
+			while (true)
+			{
+				std::cout << "Введите новый логин: ";
+				std::string user_login = HandleLoginInput();
+				auto it = std::find_if(
+					users.begin(),
+					users.end(),
+					[user_login](const UserInfo& user) {
+						return user.auth_info.login == user_login;
+					}
+				);
+				if (it != users.end())
+				{
+					std::cout << std::endl << "Пользователь с таким логином уже существует." << std::endl;
+				}
+				else
+				{
+					user.auth_info.login = user_login;
+					break;
+				}
+			}
 			continue;
 		case 5:
 			std::cout << "Введите новый пароль: ";
 			user.auth_info.password = HandlePasswordInput();
+			continue;
+		}
+	} while (selected_index != 0);
+}
+
+void ShowEditProductMenu(ProductEntry& product)
+{
+	int selected_index = -1;
+	do
+	{
+		system("cls");
+		std::cout << "Меню доступных полей:\n";
+		std::cout << "1. Название.\n";
+		std::cout << "2. Количество.\n";
+		std::cout << "3. Цена.\n";
+		std::cout << "4. Дата добавления.\n";
+		std::cout << "5. ФИО добавившего пользователя.\n";
+		std::cout << "0. Вернуться.\n";
+		std::cout << "Выберите пункт: ";
+		selected_index = GetIntFromConsole();
+
+		system("cls");
+		switch (selected_index)
+		{
+		case 1:
+			std::cout << "Введите новое название: ";
+			product.name = HandleCyrillicInput();
+			continue;
+		case 2:
+			std::cout << "Введите новое количество: ";
+			product.count = GetIntFromConsole();
+			continue;
+		case 3:
+			std::cout << "Введите новую цену: ";
+			product.price = GetDoubleFromConsole();
+			continue;
+		case 4:
+			product.time = GetSystemtimeFromConsole();
+			continue;
+		case 5:
+			product.added_by = GetFIOFromConsole();
 			continue;
 		}
 	} while (selected_index != 0);
@@ -419,14 +648,36 @@ void EditUserEntry() {
 	}
 }
 
+void EditProductEntry() {
+	system("cls");
+	if (!products.empty())
+	{
+		std::cout << "=== Редактирование товара ===" << std::endl;
+		int selectedIndex = -1;
+		selectedIndex = SelectProductRow();
+		if (selectedIndex >= 0 && selectedIndex < products.size())
+		{
+			ShowEditProductMenu(products[selectedIndex]);
+		}
+		else
+		{
+			std::cout << "Выбран несуществующий товар." << std::endl;
+			system("pause");
+		}
+	}
+	else
+	{
+		std::cout << "На данный момент нет записей, которые можно редактировать." << std::endl;
+	}
+}
+
 void DeleteUserEntry()
 {
 	system("cls");
 	if(!users.empty())
 	{
 		std::cout << "=== Удаление пользователя ===" << std::endl;
-		int selectedIndex = -1;
-		selectedIndex = SelectUserRow();
+		int selectedIndex = SelectUserRow();
 		if (selectedIndex >= 0 && selectedIndex < users.size())
 		{
 			users.erase(users.begin() + selectedIndex);
@@ -443,6 +694,29 @@ void DeleteUserEntry()
 	}
 }
 
+void DeleteProductEntry()
+{
+	system("cls");
+	if(!products.empty())
+	{
+		std::cout << "=== Удаление товара ===" << std::endl;
+		int selectedIndex = SelectProductRow();
+		if (selectedIndex >= 0 && selectedIndex < products.size())
+		{
+			products.erase(products.begin() + selectedIndex);
+		}
+		else
+		{
+			std::cout << "Выбран несуществующий товар." << std::endl;
+			system("pause");
+		}
+	} else
+	{
+		std::cout << "Таблица товаров на данный момент пуста." << std::endl;
+		system("pause");
+	}
+}
+
 void ShowAdminMenu()
 {
 	int selected_option = 0;
@@ -454,6 +728,10 @@ void ShowAdminMenu()
 		std::cout << "2. Вывести учетные записи пользователей.\n";
 		std::cout << "3. Редактировать учетную запись пользователя.\n";
 		std::cout << "4. Удалить учетную запись пользователя.\n";
+		std::cout << "5. Добавить запись о товаре.\n";
+		std::cout << "6. Вывести данные о товарах.\n";
+		std::cout << "7. Редактировать запись с товаром.\n";
+		std::cout << "8. Удалить товар.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 		selected_option = GetIntFromConsole();
@@ -472,6 +750,16 @@ void ShowAdminMenu()
 		case 4:
 			DeleteUserEntry();
 			continue;
+		case 5:
+			ShowAddNewProductForm();
+			continue;
+		case 6:
+			PrintProductsTable();
+			continue;
+		case 7:
+			EditProductEntry();
+		case 8:
+			DeleteProductEntry();
 		}
 	} while (selected_option != 0);
 }
@@ -497,12 +785,123 @@ bool CheckAdminCredentials(const AuthInfo& form)
 	return found_credentials;
 }
 
+bool CheckUserCredentials(const AuthInfo& form)
+{
+	bool found_credentials = false;
+	auto it = std::find_if(users.begin(), users.end(), [form](const UserInfo& user)
+	{
+			return user.auth_info.login == form.login;
+	});
+	if(it != users.end())
+	{
+		if(it->auth_info.password == form.password)
+		{
+			found_credentials = true;
+		}
+	}
+	return found_credentials;
+}
+
+void ReadUsersFromFile()
+{
+	std::ifstream ifs;
+	ifs.open(USERS_CREDENTIALS_FILENAME);
+	if(ifs.is_open())
+	{
+		std::string file_line;
+		while(std::getline(ifs, file_line))
+		{
+			UserInfo user_info;
+			std::istringstream oss(file_line);
+			oss >> user_info.auth_info.login >> user_info.auth_info.password >> user_info.fio.name >> user_info.fio.surname >> user_info.fio.middle_name;
+			users.push_back(user_info);
+		}
+	} else
+	{
+		std::cout << "Не удалось открыть файл с данными пользователей." << std::endl;
+		system("pause");
+	}
+}
+
+void ReadProductsFromFile()
+{
+	std::ifstream ifs;
+	ifs.open(PRODUCTS_DATA_FILENAME);
+	if (ifs.is_open())
+	{
+		std::string file_line;
+		while (std::getline(ifs, file_line))
+		{
+			ProductEntry product_info;
+			SYSTEMTIME& time = product_info.time;
+			FIO& fio = product_info.added_by;
+			std::istringstream oss(file_line);
+
+			oss >> product_info.name >> product_info.count >> product_info.price 
+				>> time.wMonth >> time.wDay >> time.wHour >> time.wMinute >> time.wSecond
+				>> fio.name >> fio.surname >> fio.middle_name;
+			products.push_back(product_info);
+		}
+	}
+	else
+	{
+		std::cout << "Не удалось открыть файл с данными о товарах." << std::endl;
+		system("pause");
+	}
+}
+
+void SaveUsersToFile()
+{
+	std::ofstream ofs;
+	ofs.open(USERS_CREDENTIALS_FILENAME);
+	if (ofs.is_open())
+	{
+		for(int i = 0; i < users.size(); i++)
+		{
+			const UserInfo& user_info = users[i];
+			// TODO: нормальные колонки
+			ofs << user_info.auth_info.login << " " << user_info.auth_info.password << " " << user_info.fio.name << " " << user_info.fio.surname << " " << user_info.fio.middle_name << std::endl;
+		}
+	} else
+	{
+		std::cout << "Не удалось открыть файл для сохранения данных пользователей." << std::endl;
+		system("pause");
+	}
+}
+
+void SaveProductsToFile()
+{
+	std::ofstream ofs;
+	ofs.open(PRODUCTS_DATA_FILENAME);
+	if (ofs.is_open())
+	{
+		for (int i = 0; i < products.size(); i++)
+		{
+			const ProductEntry& product = products[i];
+			const SYSTEMTIME& time = product.time;
+			const FIO& fio = product.added_by;
+			// TODO: нормальные колонки
+			ofs << product.name << " " << product.count << " " << product.price << " "
+				<< time.wMonth << " " << time.wDay << " " << time.wHour << " " << time.wMinute << " " << time.wSecond << " "
+				<< fio.name << " " << fio.surname << " " << fio.middle_name << std::endl;
+		}
+	}
+	else
+	{
+		std::cout << "Не удалось открыть файл для сохранения данных о товарах." << std::endl;
+		system("pause");
+	}
+}
+
 int main()
 {
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
 	int selected_option = 0;
+
+	ReadUsersFromFile();
+	ReadProductsFromFile();
 
 	do
 	{
@@ -520,16 +919,25 @@ int main()
 			else
 			{
 				std::cout << "Введены неправильные данные." << std::endl;
-				std::cout << "Нажмите любую клавишу чтобы продолжить." << std::endl;
-				_getch();
+				system("pause");
 			}
 			break;
 		case 2:
 			form_info = ShowAuthForm();
+			if(CheckUserCredentials(form_info))
+			{
+				ShowUserMenu();
+			} else
+			{
+				std::cout << "Введены неправильные данные." << std::endl;
+				system("pause");
+			}
 			system("cls");
 			break;
 		default:
 			system("cls");
+			SaveUsersToFile();
+			SaveProductsToFile();
 			std::cout << "Работа программы завершена." << std::endl;
 		}
 	} while (selected_option != 3);
