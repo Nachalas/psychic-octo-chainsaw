@@ -6,6 +6,7 @@
 #include <sstream>
 #include <limits>
 #include <iomanip>
+#include <ctime>
 #include <Windows.h>
 #include <conio.h>
 #include <tuple>
@@ -66,14 +67,41 @@ struct ProductEntry
 
 bool IsTimeLess(SYSTEMTIME lhs, SYSTEMTIME rhs)
 {
-	return std::tie(lhs.wMonth, lhs.wDay, lhs.wHour, lhs.wMinute, lhs.wSecond)
-	< std::tie(rhs.wMonth, rhs.wDay, rhs.wHour, rhs.wMinute, rhs.wSecond);
+	return std::tie(lhs.wYear, lhs.wMonth, lhs.wDay, lhs.wHour, lhs.wMinute, lhs.wSecond)
+	< std::tie(rhs.wYear, rhs.wMonth, rhs.wDay, rhs.wHour, rhs.wMinute, rhs.wSecond);
+}
+
+// Конвертирует SYSTEMTIME в time_t
+time_t system2utc(const SYSTEMTIME& time)
+{
+	struct tm stm = { 0 };
+	stm.tm_sec = time.wSecond;
+	stm.tm_min = time.wMinute;
+	stm.tm_hour = time.wHour;
+	stm.tm_mday = time.wDay;
+	stm.tm_mon = time.wMonth - 1;
+	stm.tm_year = time.wYear - 1900;
+	stm.tm_wday = time.wDayOfWeek;
+	stm.tm_yday = 0;
+	stm.tm_isdst = 0;
+
+	return mktime(&stm);
+}
+
+// Проверяет, прошло ли с даты time months месяцев
+bool isNMonthsBeforeNow(SYSTEMTIME time, int months)
+{
+	SYSTEMTIME now;
+	GetLocalTime(&now);
+	int monthsBefore = (system2utc(now) - system2utc(time)) / 2678400;
+	return monthsBefore >= months;
 }
 
 std::string GetTimeString(SYSTEMTIME time)
 {
 	return (time.wDay < 10 ? "0" : "") + std::to_string(time.wDay) + "/"
-		+ (time.wMonth < 10 ? "0" : "") + std::to_string(time.wMonth) + " "
+		+ (time.wMonth < 10 ? "0" : "") + std::to_string(time.wMonth) + "/"
+		+ std::to_string(time.wYear) + " "
 		+ (time.wHour < 10 ? "0" : "") + std::to_string(time.wHour) + ":"
 		+ (time.wMinute < 10 ? "0" : "") + std::to_string(time.wMinute) + ":"
 		+ (time.wSecond < 10 ? "0" : "") + std::to_string(time.wSecond);
@@ -139,6 +167,8 @@ double GetDoubleFromConsole()
 SYSTEMTIME GetSystemtimeFromConsole()
 {
 	SYSTEMTIME new_time{};
+	std::cout << "Введите год (2020-2022): ";
+	new_time.wYear = GetIntFromConsoleWithBounds(2020, 2022);
 	std::cout << "Введите месяц (1-12): ";
 	new_time.wMonth = GetIntFromConsoleWithBounds(1, 12);
 	std::cout << "Введите день (1-31): ";
@@ -393,11 +423,6 @@ void ShowAddNewUserForm()
 	system("pause");
 }
 
-//std::string name; // наименование товара
-//int count; // количество товара на складе
-//double price; // цена за один товар
-//SYSTEMTIME time; // время добавления товара
-//FIO added_by; // ФИО зарегистрировавшего товар
 void ShowAddNewProductForm() {
 	system("cls");
 	ProductEntry product;
@@ -408,7 +433,7 @@ void ShowAddNewProductForm() {
 	product.count = GetIntFromConsole();
 	std::cout << "Введите цену на товар: ";
 	product.price = GetDoubleFromConsole();
-	GetLocalTime(&product.time);
+	product.time = GetSystemtimeFromConsole();
 	product.added_by.name = "Валерий";
 	product.added_by.surname = "Жмышенко";
 	product.added_by.middle_name = "Альбертович";
@@ -445,16 +470,16 @@ void PrintUserEntry(int index, const UserInfo& user)
 
 void PrintProductTableHeader()
 {
-	std::cout << "__________________________________________________________________________________________________________________________________________" << std::endl;
+	std::cout << "_______________________________________________________________________________________________________________________________________________" << std::endl;
 	std::cout << "|" << std::fixed
 		<< std::setw(5) << "#" << "|"
 		<< std::setw(20) << "Название" << "|"
 		<< std::setw(15) << "Количество" << "|"
 		<< std::setw(15) << "Цена" << "|"
-		<< std::setw(15) << "Дата" << "|"
+		<< std::setw(20) << "Дата" << "|"
 		<< std::setw(62) << "ФИО добавившего пользователя" << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|_______________|_______________|_______________|______________________________________________________________" << std::endl;
+	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________" << std::endl;
 }
 
 void PrintProductEntry(int index, const ProductEntry& product)
@@ -464,10 +489,10 @@ void PrintProductEntry(int index, const ProductEntry& product)
 		<< std::setw(20) << product.name << "|"
 		<< std::setw(15) << product.count << "|"
 		<< std::setw(15) << std::setprecision(2) << product.price << "|"
-		<< std::setw(15) << GetTimeString(product.time) << "|"
+		<< std::setw(20) << GetTimeString(product.time) << "|"
 		<< std::setw(62) << GetFIOString(product.added_by) << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|_______________|_______________|_______________|______________________________________________________________|" << std::endl;
+	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________|" << std::endl;
 }
 
 void PrintUsersTable()
@@ -776,7 +801,10 @@ std::vector<ProductEntry> GetProductsByDate(SYSTEMTIME date)
 		products.begin(),
 		products.end(),
 		std::back_inserter(new_products),
-		[date](const ProductEntry& product) {return product.time.wMonth == date.wMonth && product.time.wDay == date.wDay; });
+		[date](const ProductEntry& product)
+		{
+			return product.time.wMonth == date.wMonth && product.time.wDay == date.wDay && product.time.wYear == date.wYear;
+		});
 	return new_products;
 }
 
@@ -808,6 +836,8 @@ void ShowSearchOptionsMenu()
 				continue;
 			case 2:
 				system("cls");
+				std::cout << "Введите год (2020-2022): ";
+				date_input.wYear = GetIntFromConsoleWithBounds(2020, 2022);
 				std::cout << "Введите месяц (1-12): ";
 				date_input.wMonth = GetIntFromConsoleWithBounds(1, 12);
 				std::cout << "Введите день (1-31): ";
@@ -867,6 +897,50 @@ void ShowSortingOptionsMenu()
 	}
 }
 
+std::vector<ProductEntry> GetProductsByDurationAndPrice(int min_months, double min_price)
+{
+	std::vector<ProductEntry> new_products;
+	std::copy_if(
+		products.begin(),
+		products.end(),
+		std::back_inserter(new_products),
+		[min_months, min_price](const ProductEntry& product)
+		{
+			return isNMonthsBeforeNow(product.time, min_months) && product.price > min_price;
+		});
+	std::sort(new_products.begin(), new_products.end(), [](const ProductEntry& lhs, const ProductEntry& rhs)
+		{
+			return lhs.name < rhs.name;
+		});
+	return new_products;
+}
+
+// вывести в алфавитном порядке список товаров,
+// хранящихся более x месяцев,
+// стоимость которых превышает y рублей(x, y вводятся с клавиатуры)
+void PerformTask()
+{
+	system("cls");
+	if (!products.empty())
+	{
+		std::cout << "=== Индивидуальное задание ===" << std::endl;
+		std::cout << "Вывести в алфавитном порядке список товаров: " << std::endl;
+		std::cout << "- Хранящихся более x месяцев" << std::endl;
+		std::cout << "- Стоимость которых превышает y рублей" << std::endl;
+		std::cout << "Введите x: ";
+		int months = GetIntFromConsole();
+		std::cout << "Введите y: ";
+		double price = GetDoubleFromConsole();
+		GetProductsByDurationAndPrice(months, price);
+		PrintProductsTable(GetProductsByDurationAndPrice(months, price));
+	}
+	else
+	{
+		std::cout << "Таблица товаров на данный момент пуста." << std::endl;
+		system("pause");
+	}
+}
+
 void ShowAdminMenu()
 {
 	int selected_option = 0;
@@ -884,6 +958,7 @@ void ShowAdminMenu()
 		std::cout << "8. Удалить товар.\n";
 		std::cout << "9. Сортировки.\n";
 		std::cout << "10. Поиск по товарам.\n";
+		std::cout << "11. Индивидуальное задание.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 		selected_option = GetIntFromConsole();
@@ -919,6 +994,9 @@ void ShowAdminMenu()
 			continue;
 		case 10:
 			ShowSearchOptionsMenu();
+			continue;
+		case 11:
+			PerformTask();
 			continue;
 		}
 	} while (selected_option != 0);
@@ -998,7 +1076,7 @@ void ReadProductsFromFile()
 			std::istringstream oss(file_line);
 
 			oss >> product_info.name >> product_info.count >> product_info.price 
-				>> time.wMonth >> time.wDay >> time.wHour >> time.wMinute >> time.wSecond
+				>> time.wYear >> time.wMonth >> time.wDay >> time.wHour >> time.wMinute >> time.wSecond
 				>> fio.name >> fio.surname >> fio.middle_name;
 			products.push_back(product_info);
 		}
@@ -1042,7 +1120,7 @@ void SaveProductsToFile()
 			const FIO& fio = product.added_by;
 			// TODO: нормальные колонки
 			ofs << product.name << " " << product.count << " " << product.price << " "
-				<< time.wMonth << " " << time.wDay << " " << time.wHour << " " << time.wMinute << " " << time.wSecond << " "
+				<< time.wYear << " " << time.wMonth << " " << time.wDay << " " << time.wHour << " " << time.wMinute << " " << time.wSecond << " "
 				<< fio.name << " " << fio.surname << " " << fio.middle_name << std::endl;
 		}
 	}
