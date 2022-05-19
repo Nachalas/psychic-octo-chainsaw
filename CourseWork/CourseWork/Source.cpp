@@ -466,58 +466,76 @@ void ShowAddNewProductForm(bool admin_mode) {
 	system("pause");
 }
 
+// Блок констант, задающих ширину колонкам данных в PrintUserEntry и PrintUserTableHeader
+const int USER_NUMBER_COLUMN_WIDTH = 5;
+const int USER_LOGIN_COLUMN_WIDTH = 20;
+const int USER_PASSWORD_COLUMN_WIDTH = 30;
+const int USER_SURNAME_COLUMN_WIDTH = 30;
+const int USER_NAME_COLUMN_WIDTH = 30;
+const int USER_MIDDLE_NAME_COLUMN_WIDTH = 30;
+
 // Функция, отвечающая за вывод в консоль заголовков колонок таблицы пользователей
 void PrintUserTableHeader()
 {
-	std::cout << "_______________________________________________________________________________________________________________________" << std::endl;
+	std::cout << "_______________________________________________________________________________________________________________________________________________________" << std::endl;
 	std::cout << "|" << std::fixed
-		<< std::setw(5) << "#" << "|"
-		<< std::setw(20) << "Логин" << "|"
-		<< std::setw(30) << "Пароль" << "|"
-		<< std::setw(30) << "Фамилия" << "|"
-		<< std::setw(30) << "Имя" << "|"
+		<< std::setw(USER_NUMBER_COLUMN_WIDTH) << "#" << "|"
+		<< std::setw(USER_LOGIN_COLUMN_WIDTH) << "Логин" << "|"
+		<< std::setw(USER_PASSWORD_COLUMN_WIDTH) << "Пароль" << "|"
+		<< std::setw(USER_SURNAME_COLUMN_WIDTH) << "Фамилия" << "|"
+		<< std::setw(USER_NAME_COLUMN_WIDTH) << "Имя" << "|"
+		<< std::setw(USER_MIDDLE_NAME_COLUMN_WIDTH) << "Отчество" << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|" << std::endl;
+	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
 // Выводит строку с данными пользователя user
 void PrintUserEntry(int index, const UserInfo& user)
 {
 	std::cout << "|" << std::fixed
-		<< std::setw(5) << index << "|"
-		<< std::setw(20) << user.auth_info.login << "|"
-		<< std::setw(30) << user.auth_info.password << "|"
-		<< std::setw(30) << user.fio.surname << "|"
-		<< std::setw(30) << user.fio.name << "|"
+		<< std::setw(USER_NUMBER_COLUMN_WIDTH) << index << "|"
+		<< std::setw(USER_LOGIN_COLUMN_WIDTH) << user.auth_info.login << "|"
+		<< std::setw(USER_PASSWORD_COLUMN_WIDTH) << user.auth_info.password << "|"
+		<< std::setw(USER_SURNAME_COLUMN_WIDTH) << user.fio.surname << "|"
+		<< std::setw(USER_NAME_COLUMN_WIDTH) << user.fio.name << "|"
+		<< std::setw(USER_MIDDLE_NAME_COLUMN_WIDTH) << user.fio.middle_name << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|" << std::endl;
+	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
 }
+
+//  Блок констант, задающих ширину колонкам данных в PrintProductEntry и PrintProductTableHeader
+const int PRODUCT_NUMBER_COLUMN_WIDTH = 5;
+const int PRODUCT_NAME_COLUMN_WIDTH = 20;
+const int PRODUCT_COUNT_COLUMN_WIDTH = 15;
+const int PRODUCT_PRICE_COLUMN_WIDTH = 15;
+const int PRODUCT_DATE_COLUMN_WIDTH = 20;
+const int PRODUCT_FIO_COLUMN_WIDTH = 62;
 
 // Функция, отвечающая за вывод в консоль заголовков колонок таблицы товаров
 void PrintProductTableHeader()
 {
 	std::cout << "_______________________________________________________________________________________________________________________________________________" << std::endl;
 	std::cout << "|" << std::fixed
-		<< std::setw(5) << "#" << "|"
-		<< std::setw(20) << "Название" << "|"
-		<< std::setw(15) << "Количество" << "|"
-		<< std::setw(15) << "Цена" << "|"
-		<< std::setw(20) << "Дата" << "|"
-		<< std::setw(62) << "ФИО добавившего пользователя" << "|"
+		<< std::setw(PRODUCT_NUMBER_COLUMN_WIDTH) << "#" << "|"
+		<< std::setw(PRODUCT_NAME_COLUMN_WIDTH) << "Название" << "|"
+		<< std::setw(PRODUCT_COUNT_COLUMN_WIDTH) << "Количество" << "|"
+		<< std::setw(PRODUCT_PRICE_COLUMN_WIDTH) << "Цена" << "|"
+		<< std::setw(PRODUCT_DATE_COLUMN_WIDTH) << "Дата" << "|"
+		<< std::setw(PRODUCT_FIO_COLUMN_WIDTH) << "ФИО добавившего пользователя" << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________" << std::endl;
+	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________|" << std::endl;
 }
 
 // Выводит строку с данными о товаре product
 void PrintProductEntry(int index, const ProductEntry& product)
 {
 	std::cout << "|" << std::fixed
-		<< std::setw(5) << index << "|"
-		<< std::setw(20) << product.name << "|"
-		<< std::setw(15) << product.count << "|"
-		<< std::setw(15) << std::setprecision(2) << product.price << "|"
-		<< std::setw(20) << GetTimeString(product.time) << "|"
-		<< std::setw(62) << GetFIOString(product.added_by) << "|"
+		<< std::setw(PRODUCT_NUMBER_COLUMN_WIDTH) << index << "|"
+		<< std::setw(PRODUCT_NAME_COLUMN_WIDTH) << product.name << "|"
+		<< std::setw(PRODUCT_COUNT_COLUMN_WIDTH) << product.count << "|"
+		<< std::setw(PRODUCT_PRICE_COLUMN_WIDTH) << std::setprecision(2) << product.price << "|"
+		<< std::setw(PRODUCT_DATE_COLUMN_WIDTH) << GetTimeString(product.time) << "|"
+		<< std::setw(PRODUCT_FIO_COLUMN_WIDTH) << GetFIOString(product.added_by) << "|"
 		<< std::endl;
 	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________|" << std::endl;
 }
