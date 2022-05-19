@@ -377,11 +377,6 @@ AuthInfo ShowAuthForm()
 	return form_info;
 }
 
-void ShowUserMenu()
-{
-	
-}
-
 void ShowAddNewUserForm()
 {
 	system("cls");
@@ -931,7 +926,6 @@ void PerformTask()
 		int months = GetIntFromConsole();
 		std::cout << "Введите y: ";
 		double price = GetDoubleFromConsole();
-		GetProductsByDurationAndPrice(months, price);
 		PrintProductsTable(GetProductsByDurationAndPrice(months, price));
 	}
 	else
@@ -940,6 +934,43 @@ void PerformTask()
 		system("pause");
 	}
 }
+
+void ShowUserMenu()
+{
+	int selected_option = 0;
+	do
+	{
+		system("cls");
+		std::cout << "=== Меню пользователя ===\n";
+		// TODO: вроде по курсовой добавлять от имени пользователя не надо
+		//std::cout << "5. Добавить запись о товаре.\n";
+		std::cout << "1. Вывести данные о товарах.\n";
+		std::cout << "2. Сортировки.\n";
+		std::cout << "3. Поиск по товарам.\n";
+		std::cout << "4. Индивидуальное задание.\n";
+		std::cout << "0. Выйти.\n";
+		std::cout << "Выберите пункт: ";
+		selected_option = GetIntFromConsole();
+
+		switch (selected_option)
+		{
+		case 1:
+			PrintProductsTable(products);
+			continue;
+		case 2:
+			ShowSortingOptionsMenu();
+			continue;
+		case 3:
+			ShowSearchOptionsMenu();
+			continue;
+		case 4:
+			PerformTask();
+			continue;
+		}
+
+	} while (selected_option != 0);
+}
+
 
 void ShowAdminMenu()
 {
