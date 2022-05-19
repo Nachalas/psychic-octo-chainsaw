@@ -54,6 +54,7 @@ struct UserInfo
 {
 	AuthInfo auth_info;
 	FIO fio;
+	int role;
 };
 
 struct ProductEntry
@@ -120,7 +121,8 @@ const std::string PRODUCTS_DATA_FILENAME = "products.txt";
 std::vector<UserInfo> users;
 // Вектор, содержащий данные о товарах
 std::vector<ProductEntry> products;
-
+// Текущий пользователь
+UserInfo current_user;
 
 // Считывает число типа int из консоли, при неверных входных данных пытается считать число заново
 int GetIntFromConsole()
@@ -418,7 +420,7 @@ void ShowAddNewUserForm()
 	system("pause");
 }
 
-void ShowAddNewProductForm() {
+void ShowAddNewProductForm(bool admin_mode) {
 	system("cls");
 	ProductEntry product;
 	std::cout << "=== Добавление нового товара ===" << std::endl;
@@ -429,9 +431,21 @@ void ShowAddNewProductForm() {
 	std::cout << "Введите цену на товар: ";
 	product.price = GetDoubleFromConsole();
 	product.time = GetSystemtimeFromConsole();
-	product.added_by.name = "Валерий";
-	product.added_by.surname = "Жмышенко";
-	product.added_by.middle_name = "Альбертович";
+	if (admin_mode)
+	{
+		std::cout << "Введите имя добавившего пользователя: ";
+		product.added_by.name = HandleCyrillicInput();
+		std::cout << std::endl << "Введите фамилию добавившего пользователя: ";
+		product.added_by.surname = HandleCyrillicInput();
+		std::cout << std::endl << "Введите отчество добавившего пользователя: ";
+		product.added_by.middle_name = HandleCyrillicInput();
+	} else
+	{
+		product.added_by.name = current_user.fio.name;
+		product.added_by.surname = current_user.fio.surname;
+		product.added_by.middle_name = current_user.fio.middle_name;
+	}
+
 
 	products.push_back(product);
 	std::cout << std::endl << "Запись успешно добавлена." << std::endl;
@@ -656,6 +670,11 @@ void EditUserEntry() {
 		if (selectedIndex >= 0 && selectedIndex < users.size())
 		{
 			ShowEditUserMenu(users[selectedIndex]);
+			// Если были отредактированы собственные данные
+			if(users[selectedIndex].auth_info.login == current_user.auth_info.login)
+			{
+				current_user = users[selectedIndex];
+			}
 		}
 		else
 		{
@@ -700,7 +719,14 @@ void DeleteUserEntry()
 		int selectedIndex = SelectUserRow();
 		if (selectedIndex >= 0 && selectedIndex < users.size())
 		{
-			users.erase(users.begin() + selectedIndex);
+			if(users[selectedIndex].auth_info.login != current_user.auth_info.login)
+			{
+				users.erase(users.begin() + selectedIndex);
+			} else
+			{
+				std::cout << "Нельзя удалить свой аккаунт." << std::endl;
+				system("pause");
+			}
 		}
 		else
 		{
@@ -942,12 +968,11 @@ void ShowUserMenu()
 	{
 		system("cls");
 		std::cout << "=== Меню пользователя ===\n";
-		// TODO: вроде по курсовой добавлять от имени пользователя не надо
-		//std::cout << "5. Добавить запись о товаре.\n";
 		std::cout << "1. Вывести данные о товарах.\n";
-		std::cout << "2. Сортировки.\n";
-		std::cout << "3. Поиск по товарам.\n";
-		std::cout << "4. Индивидуальное задание.\n";
+		std::cout << "2. Добавить запись о товаре.\n";
+		std::cout << "3. Сортировки.\n";
+		std::cout << "4. Поиск по товарам.\n";
+		std::cout << "5. Индивидуальное задание.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 		selected_option = GetIntFromConsole();
@@ -958,12 +983,15 @@ void ShowUserMenu()
 			PrintProductsTable(products);
 			continue;
 		case 2:
-			ShowSortingOptionsMenu();
+			ShowAddNewProductForm(false);
 			continue;
 		case 3:
-			ShowSearchOptionsMenu();
+			ShowSortingOptionsMenu();
 			continue;
 		case 4:
+			ShowSearchOptionsMenu();
+			continue;
+		case 5:
 			PerformTask();
 			continue;
 		}
@@ -1009,7 +1037,7 @@ void ShowAdminMenu()
 			DeleteUserEntry();
 			continue;
 		case 5:
-			ShowAddNewProductForm();
+			ShowAddNewProductForm(true);
 			continue;
 		case 6:
 			PrintProductsTable(products);
@@ -1033,28 +1061,25 @@ void ShowAdminMenu()
 	} while (selected_option != 0);
 }
 
-bool CheckAdminCredentials(const AuthInfo& form)
+bool CheckAdminCredentialsAndLogIn(const AuthInfo& form)
 {
-	std::ifstream ifs;
-	ifs.open(ADMIN_CREDENTIALS_FILENAME);
-	bool found_credentials = false;
-	if(ifs.is_open())
+	bool credentials_found = false;
+	auto it = std::find_if(users.begin(), users.end(), [form](const UserInfo& user)
 	{
-		std::string file_login;
-		std::string file_password;
-		ifs >> file_login >> file_password;
-		if(form.login == file_login && form.password == file_password)
+			return user.auth_info.login == form.login;
+	});
+	if(it != users.end())
+	{
+		if (it->auth_info.password == form.password && it->role == 1)
 		{
-			found_credentials = true;
+			credentials_found = true;
+			current_user = *it;
 		}
-	} else
-	{
-		std::cout << "Произошла ошибка при открытии файла." << std::endl;
 	}
-	return found_credentials;
+	return credentials_found;
 }
 
-bool CheckUserCredentials(const AuthInfo& form)
+bool CheckUserCredentialsAndLogIn(const AuthInfo& form)
 {
 	bool found_credentials = false;
 	auto it = std::find_if(users.begin(), users.end(), [form](const UserInfo& user)
@@ -1063,9 +1088,10 @@ bool CheckUserCredentials(const AuthInfo& form)
 	});
 	if(it != users.end())
 	{
-		if(it->auth_info.password == form.password)
+		if(it->auth_info.password == form.password && it->role == 0)
 		{
 			found_credentials = true;
+			current_user = *it;
 		}
 	}
 	return found_credentials;
@@ -1082,7 +1108,7 @@ void ReadUsersFromFile()
 		{
 			UserInfo user_info;
 			std::istringstream oss(file_line);
-			oss >> user_info.auth_info.login >> user_info.auth_info.password >> user_info.fio.name >> user_info.fio.surname >> user_info.fio.middle_name;
+			oss >> user_info.auth_info.login >> user_info.auth_info.password >> user_info.role >> user_info.fio.name >> user_info.fio.surname >> user_info.fio.middle_name;
 			users.push_back(user_info);
 		}
 	} else
@@ -1129,7 +1155,8 @@ void SaveUsersToFile()
 		{
 			const UserInfo& user_info = users[i];
 			// TODO: нормальные колонки
-			ofs << user_info.auth_info.login << " " << user_info.auth_info.password << " " << user_info.fio.name << " " << user_info.fio.surname << " " << user_info.fio.middle_name << std::endl;
+			ofs << user_info.auth_info.login << " " << user_info.auth_info.password << " " << user_info.role << " "
+			<< user_info.fio.name << " " << user_info.fio.surname << " " << user_info.fio.middle_name << std::endl;
 		}
 	} else
 	{
@@ -1162,6 +1189,8 @@ void SaveProductsToFile()
 	}
 }
 
+
+
 int main()
 {
 	SetConsoleCP(1251);
@@ -1181,7 +1210,7 @@ int main()
 		case 1:
 			form_info = ShowAuthForm();
 			system("cls");
-			if (CheckAdminCredentials(form_info))
+			if (CheckAdminCredentialsAndLogIn(form_info))
 			{
 				ShowAdminMenu();
 			}
@@ -1193,7 +1222,8 @@ int main()
 			break;
 		case 2:
 			form_info = ShowAuthForm();
-			if(CheckUserCredentials(form_info))
+			system("cls");
+			if(CheckUserCredentialsAndLogIn(form_info))
 			{
 				ShowUserMenu();
 			} else
