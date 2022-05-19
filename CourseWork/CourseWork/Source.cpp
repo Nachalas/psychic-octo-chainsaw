@@ -117,7 +117,6 @@ const int MAX_LOGIN_LENGTH = 12;
 const int MAX_PASSWORD_LENGTH = 12;
 const int MAX_USER_INPUT_LENGTH = 20;
 // Названия служебных файлов
-const std::string ADMIN_CREDENTIALS_FILENAME = "admin.txt";
 const std::string USERS_CREDENTIALS_FILENAME = "users.txt";
 const std::string PRODUCTS_DATA_FILENAME = "products.txt";
 // Вектор, содержащий данные о пользователях
@@ -423,6 +422,8 @@ void ShowAddNewUserForm()
 	}
 	std::cout << std::endl << "Введите пароль пользователя: ";
 	user_auth_info.password = HandlePasswordInput();
+	std::cout << std::endl << "Выберите роль для нового пользователя (0 - пользователь, 1 - админ): ";
+	user_info.role = GetIntFromConsoleWithBounds(0, 1);
 
 	users.push_back(user_info);
 	std::cout << std::endl << "Запись успешно добавлена." << std::endl;
@@ -468,6 +469,7 @@ void ShowAddNewProductForm(bool admin_mode) {
 
 // Блок констант, задающих ширину колонкам данных в PrintUserEntry и PrintUserTableHeader
 const int USER_NUMBER_COLUMN_WIDTH = 5;
+const int USER_ROLE_COLUMN_WIDTH = 5;
 const int USER_LOGIN_COLUMN_WIDTH = 20;
 const int USER_PASSWORD_COLUMN_WIDTH = 30;
 const int USER_SURNAME_COLUMN_WIDTH = 30;
@@ -477,16 +479,17 @@ const int USER_MIDDLE_NAME_COLUMN_WIDTH = 30;
 // Функция, отвечающая за вывод в консоль заголовков колонок таблицы пользователей
 void PrintUserTableHeader()
 {
-	std::cout << "_______________________________________________________________________________________________________________________________________________________" << std::endl;
+	std::cout << "_____________________________________________________________________________________________________________________________________________________________" << std::endl;
 	std::cout << "|" << std::fixed
 		<< std::setw(USER_NUMBER_COLUMN_WIDTH) << "#" << "|"
+		<< std::setw(USER_NUMBER_COLUMN_WIDTH) << "Роль" << "|"
 		<< std::setw(USER_LOGIN_COLUMN_WIDTH) << "Логин" << "|"
 		<< std::setw(USER_PASSWORD_COLUMN_WIDTH) << "Пароль" << "|"
 		<< std::setw(USER_SURNAME_COLUMN_WIDTH) << "Фамилия" << "|"
 		<< std::setw(USER_NAME_COLUMN_WIDTH) << "Имя" << "|"
 		<< std::setw(USER_MIDDLE_NAME_COLUMN_WIDTH) << "Отчество" << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
+	std::cout << "|_____|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
 // Выводит строку с данными пользователя user
@@ -494,13 +497,14 @@ void PrintUserEntry(int index, const UserInfo& user)
 {
 	std::cout << "|" << std::fixed
 		<< std::setw(USER_NUMBER_COLUMN_WIDTH) << index << "|"
+		<< std::setw(USER_ROLE_COLUMN_WIDTH) << user.role << "|"
 		<< std::setw(USER_LOGIN_COLUMN_WIDTH) << user.auth_info.login << "|"
 		<< std::setw(USER_PASSWORD_COLUMN_WIDTH) << user.auth_info.password << "|"
 		<< std::setw(USER_SURNAME_COLUMN_WIDTH) << user.fio.surname << "|"
 		<< std::setw(USER_NAME_COLUMN_WIDTH) << user.fio.name << "|"
 		<< std::setw(USER_MIDDLE_NAME_COLUMN_WIDTH) << user.fio.middle_name << "|"
 		<< std::endl;
-	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
+	std::cout << "|_____|_____|____________________|______________________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
 //  Блок констант, задающих ширину колонкам данных в PrintProductEntry и PrintProductTableHeader
