@@ -40,21 +40,22 @@ struct AuthInfo
 };
 
 struct FIO {
-	std::string surname;
-	std::string name;
-	std::string middle_name;
+	std::string surname; // фамилия
+	std::string name; // имя
+	std::string middle_name; // отчество
 };
 
+// получить фио в формате строки для вывода в таблице
 std::string GetFIOString(const FIO& fio)
 {
-	return fio.surname + " " + fio.name + " " + fio.middle_name;
+	return fio.surname + " " + fio.name + " " + fio.middle_name; 
 }
 
 struct UserInfo
 {
 	AuthInfo auth_info;
 	FIO fio;
-	int role;
+	int role; // 0 - пользователь, 1 - админ
 };
 
 struct ProductEntry
@@ -66,13 +67,14 @@ struct ProductEntry
 	FIO added_by; // ФИО зарегистрировавшего товар
 };
 
+// функция для сравнения двух дат
 bool IsTimeLess(SYSTEMTIME lhs, SYSTEMTIME rhs)
 {
 	return std::tie(lhs.wYear, lhs.wMonth, lhs.wDay, lhs.wHour, lhs.wMinute, lhs.wSecond)
 	< std::tie(rhs.wYear, rhs.wMonth, rhs.wDay, rhs.wHour, rhs.wMinute, rhs.wSecond);
 }
 
-// Конвертирует SYSTEMTIME в time_t
+// Конвертирует дату формата SYSTEMTIME в time_t
 time_t system2utc(const SYSTEMTIME& time)
 {
 	struct tm stm = { 0 };
@@ -98,6 +100,7 @@ bool isNMonthsBeforeNow(SYSTEMTIME time, int months)
 	return monthsBefore >= months;
 }
 
+// получить дату в формате DD/MM/YYYY HH:MM
 std::string GetTimeString(SYSTEMTIME time)
 {
 	return (time.wDay < 10 ? "0" : "") + std::to_string(time.wDay) + "/"
@@ -121,7 +124,7 @@ const std::string PRODUCTS_DATA_FILENAME = "products.txt";
 std::vector<UserInfo> users;
 // Вектор, содержащий данные о товарах
 std::vector<ProductEntry> products;
-// Текущий пользователь
+// Текущий авторизованный пользователь
 UserInfo current_user;
 
 // Считывает число типа int из консоли, при неверных входных данных пытается считать число заново
@@ -166,6 +169,8 @@ double GetDoubleFromConsole()
 	return value;
 }
 
+// Функция предоставляющая пользователю возможность вводить дату с консоли
+// с точностью вплоть до минут
 SYSTEMTIME GetSystemtimeFromConsole()
 {
 	SYSTEMTIME new_time{};
@@ -191,7 +196,7 @@ bool IsLoginCharInvalid(char c)
 	return !(c >= 65 && c <= 90) && // A-Z
 		!(c >= 97 && c <= 122) && // a-z
 		!(c >= 48 && c <= 57) && // 0-9
-		c != '\r' && c != '\b'; // enter
+		c != '\r' && c != '\b'; // enter + backspace
 }
 
 bool IsPasswordCharInvalid(char c)
@@ -320,6 +325,7 @@ std::string HandleCyrillicInput()
 }
 // -------
 
+// Функция для введения фамилии, имени, отчества из консоли
 FIO GetFIOFromConsole()
 {
 	FIO new_fio;
@@ -379,6 +385,9 @@ AuthInfo ShowAuthForm()
 	return form_info;
 }
 
+// Последовательно показывает поля формы для ввода данных,
+// необходимых для добавления нового пользователя.
+// Введенный логин проверяет на уникальность
 void ShowAddNewUserForm()
 {
 	system("cls");
@@ -420,6 +429,11 @@ void ShowAddNewUserForm()
 	system("pause");
 }
 
+// Последовательно показывает поля формы для ввода данных,
+// необходимых для добавления нового товара.
+// параметр admin_mode отвечает за режим добавления товара:
+// - если товар добавляет админ, он может вводить произвольное ФИО добавившего пользователя
+// - если товар добавляет пользователь, как ФИО добавившего пользователя берётся его ФИО
 void ShowAddNewProductForm(bool admin_mode) {
 	system("cls");
 	ProductEntry product;
@@ -452,6 +466,7 @@ void ShowAddNewProductForm(bool admin_mode) {
 	system("pause");
 }
 
+// Функция, отвечающая за вывод в консоль заголовков колонок таблицы пользователей
 void PrintUserTableHeader()
 {
 	std::cout << "_______________________________________________________________________________________________________________________" << std::endl;
@@ -465,6 +480,7 @@ void PrintUserTableHeader()
 	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
+// Выводит строку с данными пользователя user
 void PrintUserEntry(int index, const UserInfo& user)
 {
 	std::cout << "|" << std::fixed
@@ -477,6 +493,7 @@ void PrintUserEntry(int index, const UserInfo& user)
 	std::cout << "|_____|____________________|______________________________|______________________________|______________________________|" << std::endl;
 }
 
+// Функция, отвечающая за вывод в консоль заголовков колонок таблицы товаров
 void PrintProductTableHeader()
 {
 	std::cout << "_______________________________________________________________________________________________________________________________________________" << std::endl;
@@ -491,6 +508,7 @@ void PrintProductTableHeader()
 	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________" << std::endl;
 }
 
+// Выводит строку с данными о товаре product
 void PrintProductEntry(int index, const ProductEntry& product)
 {
 	std::cout << "|" << std::fixed
@@ -504,6 +522,7 @@ void PrintProductEntry(int index, const ProductEntry& product)
 	std::cout << "|_____|____________________|_______________|_______________|____________________|______________________________________________________________|" << std::endl;
 }
 
+// функция для печати таблицы с данными о пользователях
 void PrintUsersTable()
 {
 	system("cls");
@@ -524,6 +543,7 @@ void PrintUsersTable()
 	system("pause");
 }
 
+// функция для печати таблицы с данными о товарах
 void PrintProductsTable(const std::vector<ProductEntry>& products_vector)
 {
 	system("cls");
@@ -545,18 +565,21 @@ void PrintProductsTable(const std::vector<ProductEntry>& products_vector)
 	system("pause");
 }
 
+// функция выбора пользователя (применяется при редактировании и удалении)
 int SelectUserRow()
 {
 	std::cout << "Введите индекс пользователя: ";
 	return GetIntFromConsole();
 }
 
+// функция выбора товара (применяется при редактировании и удалении)
 int SelectProductRow()
 {
 	std::cout << "Введите индекс продукта: ";
 	return GetIntFromConsole();
 }
 
+// Показывает меню с выбором полей пользователя, доступных к редактированию
 void ShowEditUserMenu(UserInfo& user)
 {
 	int selected_index = -1;
@@ -619,6 +642,7 @@ void ShowEditUserMenu(UserInfo& user)
 	} while (selected_index != 0);
 }
 
+// Показывает меню с выбором полей товара, доступных к редактированию
 void ShowEditProductMenu(ProductEntry& product)
 {
 	int selected_index = -1;
@@ -660,6 +684,9 @@ void ShowEditProductMenu(ProductEntry& product)
 	} while (selected_index != 0);
 }
 
+// Позволяет выбрать пользователя, данные которого нужно редактировать,
+// вызывает функцию для показа меню с доступными опциями или уведомляет
+// о том, что таблица пуста/выбран неправильный пользователь
 void EditUserEntry() {
 	system("cls");
 	if(!users.empty())
@@ -687,6 +714,9 @@ void EditUserEntry() {
 	}
 }
 
+// Позволяет выбрать товар, данные которого нужно редактировать,
+// вызывает функцию для показа меню с доступными опциями или уведомляет
+// о том, что таблица пуста/выбран неправильный товар
 void EditProductEntry() {
 	system("cls");
 	if (!products.empty())
@@ -710,6 +740,8 @@ void EditProductEntry() {
 	}
 }
 
+// Позволяет выбрать пользователя, которого нужно удалить
+// или уведомляет о том, что таблица пуста/выбран неправильный пользователь
 void DeleteUserEntry()
 {
 	system("cls");
@@ -740,6 +772,8 @@ void DeleteUserEntry()
 	}
 }
 
+// Позволяет выбрать товар, который нужно удалить
+// или уведомляет о том, что таблица пуста/выбран неправильный товар
 void DeleteProductEntry()
 {
 	system("cls");
@@ -763,6 +797,8 @@ void DeleteProductEntry()
 	}
 }
 
+// Функции, возвращающие вектор товаров, отсортированных по признаку:
+// - по имени
 std::vector<ProductEntry> GetProductsSortedByName()
 {
 	std::vector<ProductEntry> new_products = products;
@@ -773,6 +809,7 @@ std::vector<ProductEntry> GetProductsSortedByName()
 	return new_products;
 }
 
+// - по цене
 std::vector<ProductEntry> GetProductsSortedByPrice()
 {
 	std::vector<ProductEntry> new_products = products;
@@ -783,6 +820,7 @@ std::vector<ProductEntry> GetProductsSortedByPrice()
 	return new_products;
 }
 
+// - по дате добавления
 std::vector<ProductEntry> GetProductsSortedByDate()
 {
 	std::vector<ProductEntry> new_products = products;
@@ -792,7 +830,10 @@ std::vector<ProductEntry> GetProductsSortedByDate()
 		});
 	return new_products;
 }
+// -------
 
+// Функции, возвращающие вектор товаров, соответствующих:
+// - название равно параметру name
 std::vector<ProductEntry> GetProductsByName(const std::string& name)
 {
 	std::vector<ProductEntry> new_products;
@@ -804,6 +845,7 @@ std::vector<ProductEntry> GetProductsByName(const std::string& name)
 	return new_products;
 }
 
+// - фамилия добавившего товар пользователя равна параметру surname
 std::vector<ProductEntry> GetProductsByAdderSurname(const std::string& surname)
 {
 	std::vector<ProductEntry> new_products;
@@ -815,6 +857,7 @@ std::vector<ProductEntry> GetProductsByAdderSurname(const std::string& surname)
 	return new_products;
 }
 
+// - товар был добавлен в дату date (с точностью до год-месяц-день)
 std::vector<ProductEntry> GetProductsByDate(SYSTEMTIME date)
 {
 	std::vector<ProductEntry> new_products;
@@ -828,7 +871,9 @@ std::vector<ProductEntry> GetProductsByDate(SYSTEMTIME date)
 		});
 	return new_products;
 }
+// -------
 
+// Показывает меню с вариантами поиска по товарам
 void ShowSearchOptionsMenu()
 {
 	system("cls");
@@ -881,6 +926,7 @@ void ShowSearchOptionsMenu()
 	}
 }
 
+// Показывает меню с вариантами сортировки товаров
 void ShowSortingOptionsMenu()
 {
 	system("cls");
@@ -918,6 +964,10 @@ void ShowSortingOptionsMenu()
 	}
 }
 
+// Возвращает вектор товаров согласно требований индивидуального задания:
+// вывести в алфавитном порядке список товаров,
+// хранящихся более x месяцев,
+// стоимость которых превышает y рублей(x, y вводятся с клавиатуры)
 std::vector<ProductEntry> GetProductsByDurationAndPrice(int min_months, double min_price)
 {
 	std::vector<ProductEntry> new_products;
@@ -936,9 +986,7 @@ std::vector<ProductEntry> GetProductsByDurationAndPrice(int min_months, double m
 	return new_products;
 }
 
-// вывести в алфавитном порядке список товаров,
-// хранящихся более x месяцев,
-// стоимость которых превышает y рублей(x, y вводятся с клавиатуры)
+// Последовательно показывает поля формы для индивидуального задания
 void PerformTask()
 {
 	system("cls");
@@ -961,6 +1009,7 @@ void PerformTask()
 	}
 }
 
+// Показывает опции меню, доступные для пользователя
 void ShowUserMenu()
 {
 	int selected_option = 0;
@@ -999,7 +1048,7 @@ void ShowUserMenu()
 	} while (selected_option != 0);
 }
 
-
+// Показывает опции меню, доступные для администратора
 void ShowAdminMenu()
 {
 	int selected_option = 0;
@@ -1061,6 +1110,9 @@ void ShowAdminMenu()
 	} while (selected_option != 0);
 }
 
+// Проверяют введенные пользователем в форме для авторизации
+// данные и, если такой пользователь с соответствующим уровнем
+// доступа найден, авторизует пользователя и возвращает true
 bool CheckAdminCredentialsAndLogIn(const AuthInfo& form)
 {
 	bool credentials_found = false;
@@ -1096,7 +1148,10 @@ bool CheckUserCredentialsAndLogIn(const AuthInfo& form)
 	}
 	return found_credentials;
 }
+// --------
 
+// Считывает данные пользователей и их уровни доступа из файла
+// или уведомляет, что не удалось открыть файл
 void ReadUsersFromFile()
 {
 	std::ifstream ifs;
@@ -1118,6 +1173,8 @@ void ReadUsersFromFile()
 	}
 }
 
+// Считывает данные о товарах из файла
+// или уведомляет, что не удалось открыть файл
 void ReadProductsFromFile()
 {
 	std::ifstream ifs;
@@ -1145,6 +1202,8 @@ void ReadProductsFromFile()
 	}
 }
 
+// Сохраняет считанные из файла и измененные в процессе работы программы данные обратно в файл
+// или уведомляет о невозможности открыть файл
 void SaveUsersToFile()
 {
 	std::ofstream ofs;
