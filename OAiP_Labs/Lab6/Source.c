@@ -225,6 +225,153 @@ TreeNode* FindMaxKeyNode(TreeNode* tree)
 	return tree;
 }
 
+void StraightTreeTraversal(TreeNode* tree)
+{
+	if (tree != NULL)
+	{
+		std::cout << "(" << tree->info.key << ", \'" << tree->info.str << "\')" << std::endl;
+		StraightTreeTraversal(tree->left);
+		StraightTreeTraversal(tree->right);
+	}
+}
+
+void ReverseTreeTraversal(TreeNode* tree)
+{
+	if (tree != NULL)
+	{
+		StraightTreeTraversal(tree->left);
+		StraightTreeTraversal(tree->right);
+		std::cout << "(" << tree->info.key << ", \'" << tree->info.str << "\')" << std::endl;
+	}
+}
+
+void KeyIncreaseTreeTraversal(TreeNode* tree)
+{
+	if(tree != NULL)
+	{
+		KeyIncreaseTreeTraversal(tree->left);
+		std::cout << "(" << tree->info.key << ", \'" << tree->info.str << "\')" << std::endl;
+		KeyIncreaseTreeTraversal(tree->right);
+	}
+}
+
+void RemoveTreeElement(TreeNode* root, int key) {
+	TreeNode* Del, *Prev_Del, *R, *Prev_R;
+
+	Del = root;
+	Prev_Del = NULL;
+
+	while (Del != NULL && Del->info.key != key) {
+		Prev_Del = Del;
+		if (Del->info.key > key)
+		{
+			Del = Del->left;
+		}
+		else
+		{
+			Del = Del->right;
+		}
+	}
+
+	if (Del == NULL) {
+		std::cout << "Элемент с указанным ключом не был найден" << std::endl;
+		return;
+	}
+	
+	if (Del->right == NULL) { R = Del->left; }
+	else {
+		if (Del->left == NULL) { R = Del->right; }
+		else {
+			Prev_R = Del;
+			R = Del->left;
+			while (R->right != NULL) {
+				Prev_R = R;
+				R = R->right;
+			}
+
+			if (Prev_R == Del) R->right = Del->right;
+			else {
+				R->right = Del->right;
+				Prev_R->right = R->left;
+				R->left = Prev_R;
+			}
+		}
+	}
+	if (Del == root)
+	{
+		root = R;
+	}
+	else
+	{
+		if (Del->info.key < Prev_Del->info.key)
+		{
+			Prev_Del->left = R;
+		}
+		else
+		{
+			Prev_Del->right = R;
+		}
+	}
+		
+	delete Del;
+	std::cout << "Элемент успешно удалён" << std::endl;
+}
+
+
+void ShowTraversalOptionsMenu(TreeNode* tree)
+{
+	int selected_option = -1;
+	do
+	{
+		system("cls");
+		std::cout << "Меню выбора способа обхода дерева: \n";
+		std::cout << "1. Прямой обход (root => left => right).\n";
+		std::cout << "2. Обратный обход (left => right => root).\n";
+		std::cout << "3. В порядке возрастания ключа (left => root => right).\n";
+		std::cout << "0. Выйти.\n";
+		std::cout << "Выберите пункт: ";
+
+		selected_option = GetIntFromConsole();
+
+		switch (selected_option)
+		{
+		case 1:
+			if(!IsTreeEmpty(tree))
+			{
+				PrintTree(tree, 0);
+				StraightTreeTraversal(tree);
+			} else
+			{
+				std::cout << "Дерево не имеет элементов." << std::endl;
+			}
+			system("pause");
+			continue;
+		case 2:
+			if (!IsTreeEmpty(tree))
+			{
+				PrintTree(tree, 0);
+				ReverseTreeTraversal(tree);
+			} else
+			{
+				std::cout << "Дерево не имеет элементов." << std::endl;
+			}
+			system("pause");
+			continue;
+		case 3:
+			if (!IsTreeEmpty(tree))
+			{
+				PrintTree(tree, 0);
+				KeyIncreaseTreeTraversal(tree);
+			} else
+			{
+				std::cout << "Дерево не имеет элементов." << std::endl;
+			}
+			system("pause");
+			continue;
+		}
+	} while (selected_option != 0);
+}
+
 void ShowMenu()
 {
 	int selected_index = -1;
@@ -236,6 +383,7 @@ void ShowMenu()
 	Info* search_info = nullptr;
 	TreeNode* min_key_node = nullptr;
 	TreeNode* max_key_node = nullptr;
+	int key_to_delete = -1;
 
 	do
 	{
@@ -247,6 +395,8 @@ void ShowMenu()
 		std::cout << "4. Добавить в дерево новую запись.\n";
 		std::cout << "5. Поиск по ключу.\n";
 		std::cout << "6. Индивидуальное задание.\n";
+		std::cout << "7. Обходы дерева.\n";
+		std::cout << "8. Удалить элемент из дерева.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 
@@ -339,6 +489,14 @@ void ShowMenu()
 			}
 			system("pause");
 			continue;
+		case 7:
+			ShowTraversalOptionsMenu(tree);
+			continue;
+		case 8:
+			std::cout << "Введите ключ элемента для удаления: " << std::endl;
+			key_to_delete = GetIntFromConsoleWithBounds(0, 10000);
+			RemoveTreeElement(tree, key_to_delete);
+			system("pause");
 		}
 	} while (selected_index != 0);
 	FreeTree(tree);
