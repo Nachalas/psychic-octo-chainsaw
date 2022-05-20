@@ -44,12 +44,12 @@ bool IsExpressionCharInvalid(char c)
 	&& c != 94; // '^'
 }
 
-void HandleExpressionInput(char* str)
+void HandleStringInput(char* str)
 {
 	char c = ' ';
 	int i = 0;
 
-	while (true)
+	while (1)
 	{
 		do
 		{
@@ -234,6 +234,7 @@ double Count(const char* prefix_str)
 			break;
 		}
 	}
+	FreeStack(in_stack);
 	return sum;
 }
 
@@ -263,7 +264,7 @@ void ShowMenu()
 		{
 		case 1:
 			std::cout << "¬ведите выражение: ";
-			HandleExpressionInput(expression);
+			HandleStringInput(expression);
 			continue;
 		case 2:
 			if(strlen(expression) != 0)
