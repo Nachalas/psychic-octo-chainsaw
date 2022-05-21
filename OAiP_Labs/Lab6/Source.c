@@ -317,6 +317,74 @@ void RemoveTreeElement(TreeNode* root, int key) {
 	std::cout << "Элемент успешно удалён" << std::endl;
 }
 
+void GetTreeElemCount(TreeNode* tree, int& count)
+{
+	if (tree != NULL)
+	{
+		count++;
+		GetTreeElemCount(tree->left, count);
+		GetTreeElemCount(tree->right, count);
+	}
+}
+
+void CopyTreeToArray(TreeNode* tree, Info* arr, int& index)
+{
+	if (tree != NULL)
+	{
+		arr[index] = tree->info;
+		index++;
+		CopyTreeToArray(tree->left, arr, index);
+		CopyTreeToArray(tree->right, arr, index);
+	}
+}
+
+// Сортировка пузырьком
+void SortInfoArray(Info* array, int size)
+{
+	int i, j;
+	int temp_key;
+	for(i = 0; i < size - 1; i++)
+	{
+		for(j = 0; j < size - i - 1; j++)
+		{
+			if(array[j].key > array[j + 1].key)
+			{
+				temp_key = array[j].key;
+				array[j].key = array[j + 1].key;
+				array[j + 1].key = temp_key;
+			}
+		}
+	}
+}
+
+void Make_Blns(TreeNode** p, int n, int k, Info* info_array) {
+	if (n == k) {
+		*p = NULL;
+		return;
+	}
+	else {
+		int m = (n + k) / 2;
+		*p = new TreeNode();
+		(*p)->info.key = info_array[m].key;
+		strcpy_s((*p)->info.str, MAX_STRING_LENGTH, info_array[m].str);
+		Make_Blns(&(*p)->left, n, m, info_array);
+		Make_Blns(&(*p)->right, m + 1, k, info_array);
+	}
+}
+
+
+TreeNode* BalanceTree(TreeNode* tree)
+{
+	int tree_elem_count = 0;
+	int info_array_index = 0;
+	GetTreeElemCount(tree, tree_elem_count);
+	Info* info_array = new Info[tree_elem_count];
+	CopyTreeToArray(tree, info_array, info_array_index);
+	SortInfoArray(info_array, tree_elem_count);
+	FreeTree(tree);
+	Make_Blns(&tree, 0, tree_elem_count, info_array);
+	return tree;
+}
 
 void ShowTraversalOptionsMenu(TreeNode* tree)
 {
@@ -397,6 +465,7 @@ void ShowMenu()
 		std::cout << "6. Индивидуальное задание.\n";
 		std::cout << "7. Обходы дерева.\n";
 		std::cout << "8. Удалить элемент из дерева.\n";
+		std::cout << "9. Сбалансировать дерево.\n";
 		std::cout << "0. Выйти.\n";
 		std::cout << "Выберите пункт: ";
 
@@ -497,6 +566,11 @@ void ShowMenu()
 			key_to_delete = GetIntFromConsoleWithBounds(0, 10000);
 			RemoveTreeElement(tree, key_to_delete);
 			system("pause");
+			continue;
+		case 9:
+			tree = BalanceTree(tree);
+			system("pause");
+			continue;
 		}
 	} while (selected_index != 0);
 	FreeTree(tree);
