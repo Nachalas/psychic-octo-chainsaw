@@ -474,11 +474,11 @@ void ShowMenu()
 		switch (selected_index)
 		{
 		case 1:
-			std::cout << "Введите количество добавляемой информации: ";
 			if (info_array != NULL)
 			{
 				FreeInfoArray(info_array);
 			}
+			std::cout << "Введите количество добавляемой информации: ";
 			info_array_elem_count = GetIntFromConsole();
 			info_array = new Info[info_array_elem_count];
 			for(int i = 0; i < info_array_elem_count; i++)
@@ -574,6 +574,10 @@ void ShowMenu()
 		}
 	} while (selected_index != 0);
 	FreeTree(tree);
+	if (info_array != NULL)
+	{
+		FreeInfoArray(info_array);
+	}
 }
 
 void main()
