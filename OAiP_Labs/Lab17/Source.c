@@ -1,5 +1,4 @@
 #include <Windows.h>
-#include <math.h>
 #include <iostream>
 
 const int LOWER_BOUND = 23000;
