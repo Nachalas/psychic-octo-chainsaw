@@ -139,7 +139,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Auth.cpp" />
+    <ClCompile Include="ConsoleUtils.cpp" />
+    <ClCompile Include="DataAccessUtils.cpp" />
+    <ClCompile Include="FileUtils.cpp" />
+    <ClCompile Include="FIOUtils.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="TableUtils.cpp" />
+    <ClCompile Include="TimeUtils.cpp" />
+    <ClCompile Include="VectorUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Auth.h" />
+    <ClInclude Include="ConsoleUtils.h" />
+    <ClInclude Include="DataAccessUtils.h" />
+    <ClInclude Include="FileUtils.h" />
+    <ClInclude Include="FIOUtils.h" />
+    <ClInclude Include="Global.h" />
+    <ClInclude Include="Menu.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="Source.h" />
+    <ClInclude Include="TableUtils.h" />
+    <ClInclude Include="TimeUtils.h" />
+    <ClInclude Include="VectorUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
